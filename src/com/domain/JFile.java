@@ -3,33 +3,62 @@ package com.domain;
 import java.nio.file.attribute.FileTime;
 import java.util.Date;
 
-public class JFile {
+import javafx.beans.property.LongProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleLongProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+
+public class JFile{
 	
-	private String name;
-	private Long size;
-	private FileTime fileTime;
+	protected StringProperty name;
+	private StringProperty size;
+	private final ObjectProperty<FileTime> fileTime;
 	
-	public JFile() {}
+	public JFile() {
+		this("", "", null);
+	}
 	
-	public String getName() {
+	public JFile(String name, String size, FileTime time) {
+		this.name = new SimpleStringProperty(name);
+		this.size = new SimpleStringProperty(size);
+		this.fileTime = new SimpleObjectProperty<FileTime>(time);
+	}
+	
+	public StringProperty nameProperty() {
 		return name;
 	}
-	public void setName(String name) {
-		this.name = name;
+	
+	public String getName() {
+		return name.get();
 	}
-	public Long getSize() {
+	
+	public void setName(String name) {
+		this.name.set(name);
+	}
+	
+	public StringProperty sizeProperty() {
 		return size;
 	}
-	public void setSize(Long size) {
-		this.size = size;
+	
+	public String getSize() {
+		return size.get();
 	}
-
-	public FileTime getFileTime() {
+	public void setSize(String size) {
+		this.size.set(size);;
+	}
+	
+	public ObjectProperty<FileTime> fileTimeProperty() {
 		return fileTime;
+	}
+	
+	public FileTime getFileTime() {
+		return fileTime.get();
 	}
 
 	public void setFileTime(FileTime fileTime) {
-		this.fileTime = fileTime;
+		this.fileTime.set(fileTime);
 	}
 
 	

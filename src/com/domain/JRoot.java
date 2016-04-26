@@ -1,18 +1,20 @@
 package com.domain;
 
+import javafx.beans.property.StringProperty;
+
 public class JRoot {
 	
-	private String path;
+	private StringProperty path;
 	
-	public JRoot(String path) {
+	public JRoot(StringProperty path) {
 		this.path = path;
 	}
 
-	public String getPath() {
+	public StringProperty getPath() {
 		return path;
 	}
 
-	public void setPath(String path) {
+	public void setPath(StringProperty path) {
 		this.path = path;
 	}
 	

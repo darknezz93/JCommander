@@ -6,17 +6,23 @@ import java.util.List;
 
 import com.domain.JRoot;
 
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+
 public class JRootService {
 	
-	public List<JRoot> getSystemRoots() {
+	public ObservableList<String> getSystemRoots() {
 
-		List<JRoot> roots = new ArrayList<>();
+		ObservableList<String> roots = FXCollections.observableArrayList();
 		File[] paths;
 		try {
 			paths = File.listRoots();
 			for (File path : paths) {
-				JRoot root = new JRoot(path.toString());
-				roots.add(root);
+				JRoot root = new JRoot(new SimpleStringProperty(path.toString()));
+				//roots.add(root);
+				roots.add(path.toString());
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
