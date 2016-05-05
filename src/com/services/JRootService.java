@@ -30,6 +30,16 @@ public class JRootService {
 		return roots;
 	}
 	
+	public boolean checkIfRootPath(String path) {
+		ObservableList<String> roots = getSystemRoots();
+		for(String root :  roots) {
+			if(root.equals(path)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	
 
 }

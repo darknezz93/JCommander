@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.BorderPane?>
+
+<BorderPane xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.controllers.CopyScreenController">
+   <top>
+      <AnchorPane prefHeight="284.0" prefWidth="532.0" BorderPane.alignment="CENTER">
+         <children>
+            <Button fx:id="copyButton" layoutX="175.0" layoutY="221.0" mnemonicParsing="false" onMouseClicked="#listenCopyButton" text="Copy" />
+            <Button fx:id="cancelButton" layoutX="297.0" layoutY="221.0" mnemonicParsing="false" onAction="#listenCancelButton" text="Cancel" />
+            <ProgressBar fx:id="progressBar" layoutX="57.0" layoutY="167.0" prefHeight="18.0" prefWidth="417.0" progress="0.0" />
+            <TextField fx:id="pathTextField" layoutX="87.0" layoutY="84.0" prefHeight="25.0" prefWidth="386.0" />
+            <Label fx:id="labelCopyFrom" layoutX="47.0" layoutY="52.0" prefHeight="17.0" prefWidth="35.0" text="Copy: " />
+            <Label fx:id="labelCopyTo" layoutX="56.0" layoutY="88.0" text="To:" />
+            <TextField fx:id="textFieldCopyFrom" editable="false" layoutX="87.0" layoutY="48.0" prefHeight="25.0" prefWidth="386.0" />
+         </children>
+      </AnchorPane>
+   </top>
+</BorderPane>

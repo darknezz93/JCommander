@@ -3,7 +3,11 @@ package application;
 import java.io.IOException;
 import java.util.List;
 
+import com.controllers.CopyScreenController;
 import com.controllers.JCommanderMainController;
+import com.controllers.MoveScreenController;
+import com.controllers.ProgressBarController;
+import com.controllers.RootLayoutController;
 import com.domain.JFile;
 import com.domain.JRoot;
 import com.services.JFileService;
@@ -14,6 +18,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.stage.Stage;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
@@ -28,7 +33,58 @@ public class Main extends Application {
     private ObservableList<JFile> jDirs = FXCollections.observableArrayList();
 	
     private Stage primaryStage;
+    private Stage progressStage;
+    private Stage copyScreenStage;
+    private Stage moveScreenStage;
+    private Parent root;
+    private Parent rootCopy;
+    private Parent rootMove;
     private BorderPane rootLayout;
+    
+    private ProgressBarController progressController;
+    private CopyScreenController copyController;
+    private MoveScreenController moveController;
+    private RootLayoutController rootController;
+    
+    public void showCopyScreenStage() {
+    	copyScreenStage.show();
+    }
+    
+    public void closeCopyScreenStage() {
+    	copyScreenStage.close();
+    }
+    
+    public void showProgressStage() {
+    	progressStage.show();
+    }
+    
+    public void closeProgressStage() {
+    	progressStage.close();
+    }
+    
+    public void showMoveScreenStage() {
+    	moveScreenStage.show();
+    }
+    
+    public void closeMoveScreenStage() {
+    	moveScreenStage.close();
+    }
+    
+    public CopyScreenController getCopyScreenController() {
+    	return this.copyController;
+    }
+    
+    public ProgressBarController getProgressController() {
+    	return this.progressController;
+    }
+    
+    public MoveScreenController getMoveScreenController() {
+    	return this.moveController;
+    }
+    
+    public RootLayoutController getRootController() {
+    	return this.rootController;
+    }
 
     @Override
     public void start(Stage primaryStage) throws IOException {
@@ -38,7 +94,7 @@ public class Main extends Application {
        // this.jDirs = (ObservableList<JDirectory>) dirService.getDirectoriesInDirectory("C:/");
 
         initRootLayout();
-        showJCommanderOverview();
+        showJCommanderOverview(); 
     }
     
     public void initRootLayout() {
@@ -48,7 +104,40 @@ public class Main extends Application {
             rootLayout = (BorderPane) loader.load();
             Scene scene = new Scene(rootLayout);
             primaryStage.setScene(scene);
+            rootController = loader.getController();
+            rootController.setMainApp(this);
             primaryStage.show();
+            
+            FXMLLoader loaderProgress = new FXMLLoader();
+            loaderProgress.setLocation(Main.class.getResource("/com/controllers/ProgressBar.fxml"));
+			root = loaderProgress.load();
+			progressStage = new Stage();
+			progressStage.setTitle("Delete");
+			progressStage.setScene(new Scene(root, 450, 200));
+			//progressStage.show();
+			progressController = loaderProgress.getController();
+			progressController.setMainApp(this);
+			
+            FXMLLoader loaderCopyScreen = new FXMLLoader();
+            loaderCopyScreen.setLocation(Main.class.getResource("/com/controllers/CopyScreen.fxml"));
+			rootCopy = loaderCopyScreen.load();
+			copyScreenStage = new Stage();
+			copyScreenStage.setTitle("Copy");
+			copyScreenStage.setScene(new Scene(rootCopy, 550, 300));
+			//progressStage.show();
+			copyController = loaderCopyScreen.getController();
+			copyController.setMainApp(this);
+			
+			FXMLLoader loaderMoveScreen = new FXMLLoader();
+            loaderMoveScreen.setLocation(Main.class.getResource("/com/controllers/MoveScreen.fxml"));
+			rootMove = loaderMoveScreen.load();
+			moveScreenStage = new Stage();
+			moveScreenStage.setTitle("Move");
+			moveScreenStage.setScene(new Scene(rootMove, 500, 250));
+			//progressStage.show();
+			moveController = loaderMoveScreen.getController();
+			moveController.setMainApp(this);
+            
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -63,6 +152,7 @@ public class Main extends Application {
             
             JCommanderMainController controller = loader.getController();
             controller.setMain(this);
+            
             
         } catch (IOException e) {
             e.printStackTrace();
@@ -85,27 +175,5 @@ public class Main extends Application {
 	public static void main(String[] args) throws IOException {
 		launch(args);
 		
-		/*List<JFile> files = fileService.getFilesForDirectory("C:\\Users\\Adam\\Desktop\\Studia\\CV\\2015_23_10");
-		for(JFile file : files) {
-			System.out.println(file.getName()+ " , " + file.getSize() + " , " + file.getFileTime());
-		}
-		System.out.println("\n");
-		List<JDirectory> dirs = dirService.getDirectoriesInDirectory("C:\\Users\\Adam\\Desktop\\Lab1\\Lab1\\Lab1");
-		for(JDirectory dir : dirs) {
-			System.out.println(dir.getName());
-		}
-		
-		System.out.println("\n");
-		List<JRoot> roots = rootService.getSystemRoots();
-		for(JRoot root: roots) {
-			System.out.println(root.getPath());
-		}*/
-		
-		//fileService.copyFile("C:\\Users\\Adam\\Desktop\\Testowy1\\plik1.txt", "C:\\Users\\Adam\\Desktop\\Testowy2\\skopiowany.txt");
-		//fileService.moveFile("C:\\Users\\Adam\\Desktop\\Testowy1\\plik1.txt", "C:\\Users\\Adam\\Desktop\\Testowy2\\plik1.txt");
-		//fileService.deleteFile("C:\\Users\\Adam\\Desktop\\Testowy1\\plik2.txt");
-		//dirService.copyDirectory("C:\\Users\\Adam\\Desktop\\Testowy1", "C:\\Users\\Adam\\Desktop\\Testowy2\\Testowy1");
-		//dirService.moveDirectory("C:\\Users\\Adam\\Desktop\\Testowy1", "C:\\Users\\Adam\\Desktop\\Testowy2\\Testowy1");
-		//dirService.deleteDirectory("C:\\Users\\Adam\\Desktop\\Testowy1_kopia");
 	}
 }

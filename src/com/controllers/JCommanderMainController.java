@@ -7,22 +7,44 @@ import com.services.JRootService;
 
 import application.Main;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.attribute.FileTime;
 import java.util.Date;
+import java.util.Optional;
+import java.util.ResourceBundle;
 
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBase;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TreeItem;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.stage.Stage;
 
 public class JCommanderMainController {
 	
@@ -57,6 +79,18 @@ public class JCommanderMainController {
 	private TableColumn<JFile, String> createDateColumn1;
 	
 	
+	@FXML 
+	Button button;
+	
+	@FXML
+	Button button1;
+	
+	@FXML
+	Button cancelButton;
+	
+	@FXML
+	private ProgressBar progressBar;
+	
 	@FXML
 	private TextField curDirTextField;
 	
@@ -72,11 +106,29 @@ public class JCommanderMainController {
 	@FXML
 	private Label createDateLabel;
 	
+	@FXML
+	private ProgressBarController progressBarController = new ProgressBarController();
+	
+	@FXML
+	private Label progressBarLabel;
+	
+	@FXML
+	private Button progressBarCancel;
+	
+	
 	private Main main;
 	
 	private JFileService fileService = new JFileService();
 	
 	private JRootService rootService = new JRootService();
+	
+	private RootLayoutController rootController;
+	
+	private CopyScreenController copyController;
+	private MoveScreenController moveController;
+	
+	private ResourceBundle resourceBundle;
+	
 		
 	public JCommanderMainController() {
 		
@@ -86,20 +138,34 @@ public class JCommanderMainController {
 	private void initialize() {
 		nameColumn.setCellValueFactory(cellData -> cellData.getValue().nameProperty());
 		sizeColumn.setCellValueFactory(cellData -> cellData.getValue().sizeProperty());
-		createDateColumn.setCellValueFactory(cellData -> cellData.getValue().fileTimeProperty().asString());
+		createDateColumn.setCellValueFactory(cellData -> cellData.getValue().fileTimeProperty());
 		nameColumn1.setCellValueFactory(cellData -> cellData.getValue().nameProperty());
 		sizeColumn1.setCellValueFactory(cellData -> cellData.getValue().sizeProperty());
-		createDateColumn1.setCellValueFactory(cellData -> cellData.getValue().fileTimeProperty().asString());
+		createDateColumn1.setCellValueFactory(cellData -> cellData.getValue().fileTimeProperty());
 	}
 	
     public void setMain(Main main) throws IOException {
         this.main = main;
         
+        rootController = main.getRootController();
+        resourceBundle = rootController.getResourceBundle();
+        rootController.setJCommaderMainController(this);
+		copyController = main.getCopyScreenController();
+	    moveController = main.getMoveScreenController();
         initializeComponents();
         
-        setComboBoxItems();
-        setComboBox1Items();
+        main.getRootController().getEnglish().setSelected(true);
+        listenComboBoxItemsChange();
+        listenComboBox1ItemsChange();
         onCurDirTextFieldEnter();
+        onCurDirTextField1Enter();
+        listenTableDoubleClick();
+        listenTable1DoubleClick();
+        listenButton();
+        listenButton1();
+        onJDirectoryTableKeyEvent();
+        onJDirectoryTable1KeyEvent();
+        
 
    
     }
@@ -117,7 +183,27 @@ public class JCommanderMainController {
         curDirTextField1.setText(rootService.getSystemRoots().get(0));
     }
     
-    public void setComboBoxItems() {
+    public void updateDirectoryContent(String dirPath) throws IOException {
+    	ObservableList<JFile> all = fileService.getDirectoriesAndFiles(dirPath);
+    	jDirectoryTable.setItems(all);
+    }
+    
+    public void updateDirectoryContent() throws IOException {
+    	ObservableList<JFile> all = fileService.getDirectoriesAndFiles(curDirTextField.getText());
+    	jDirectoryTable.setItems(all);
+    }
+    
+    public void updateDirectory1Content(String dirPath) throws IOException {
+    	ObservableList<JFile> all = fileService.getDirectoriesAndFiles(dirPath);
+    	jDirectoryTable1.setItems(all);
+    }
+    
+    public void updateDirectory1Content() throws IOException {
+    	ObservableList<JFile> all = fileService.getDirectoriesAndFiles(curDirTextField1.getText());
+    	jDirectoryTable1.setItems(all);
+    }
+    
+    public void listenComboBoxItemsChange() {
         jRootComboBox.valueProperty().addListener(new ChangeListener<String>() {
             @Override public void changed(ObservableValue ov, String t, String t1) {
             	try {
@@ -130,7 +216,7 @@ public class JCommanderMainController {
         });
     }
     
-    public void setComboBox1Items() {
+    public void listenComboBox1ItemsChange() {
         jRootComboBox1.valueProperty().addListener(new ChangeListener<String>() {
             @Override public void changed(ObservableValue ov, String t, String t1) {
             	try {
@@ -140,6 +226,284 @@ public class JCommanderMainController {
 					e.printStackTrace();
 				}
             }    
+        });
+    }
+    	
+	public void onJDirectoryTableKeyEvent() throws IOException {
+		
+		copyController.setJCommaderMainController(this);
+		moveController.setJCommaderMainController(this);
+
+		jDirectoryTable.setOnKeyPressed(new EventHandler<KeyEvent>() {
+			@Override
+			public void handle(final KeyEvent keyEvent) {
+				final JFile selectedItem = jDirectoryTable.getSelectionModel().getSelectedItem();
+
+				if (selectedItem != null) {
+					/////////////////////COPY JDIR//////////////////////////////////////////////////
+					if (keyEvent.getCode().equals(KeyCode.F5)) {
+
+							String copyFromPath = fileService.validateDirectoryPath(curDirTextField.getText(), selectedItem.getName());
+							copyController.setTextFieldCopyFrom(copyFromPath);
+
+							if (selectedItem.getSize().equals("<DIR>")) {
+								System.out.println("Directory");
+								main.showCopyScreenStage();
+								copyController.setTextLabelCopyTo("To: ");
+								String copyTo = fileService.validateDirectoryPath(curDirTextField1.getText(), selectedItem.getName());
+								copyController.setPathTextFieldText(copyTo);
+								
+							} else {
+								System.out.println("Copying file.");
+								
+								 main.showCopyScreenStage();
+								 copyController.setTextLabelCopyTo("To: ");
+								 String copyTo = fileService.validateDirectoryPath(curDirTextField1.getText(), selectedItem.getName());
+								 copyController.setPathTextFieldText(copyTo);
+								 
+							}
+					} //////////////////// DELETE JDIR///////////////////////////////////////////
+					else if (keyEvent.getCode().equals(KeyCode.DELETE)) {
+
+						Alert alert = new Alert(AlertType.CONFIRMATION);
+						alert.setTitle("Deleting");
+						alert.setHeaderText("Deleting: " + selectedItem.getName());
+						alert.setContentText("Are you sure?");
+
+						Optional<ButtonType> result = alert.showAndWait();
+
+						if (result.get() == ButtonType.OK) {
+
+							main.showProgressStage();
+							ProgressBarController progressController = main.getProgressController();
+							progressController.setTextLabel("Deleting: " + selectedItem.getName());
+
+							if (selectedItem.getSize().equals("<DIR>")) {
+								
+								Task<Void> task = new Task<Void>() {
+									@Override
+									public Void call() throws InterruptedException, IOException {
+										String directoryToDelete = fileService.validateDirectoryPath(curDirTextField1.getText(), selectedItem.getName());
+										double filesInDirectoryCounter = fileService.getFilesInDirectoryCount(directoryToDelete);
+										fileService.deleteDirectory(directoryToDelete, progressController, filesInDirectoryCounter);
+										Platform.runLater(new Runnable() {
+										    public void run() {
+										        main.closeProgressStage();
+										        progressController.setProgress(0);
+										        try {
+													updateDirectory1Content(curDirTextField1.getText());
+												} catch (IOException e) {
+													e.printStackTrace();
+												}
+										    }
+										});
+										return null;
+									}
+								};
+
+								Thread th = new Thread(task);
+								th.setDaemon(true);
+								th.start();
+								
+							} else {
+								System.out.println("Deleting file.");
+								
+								Task<Void> task = new Task<Void>() {
+									@Override
+									public Void call() throws InterruptedException, IOException {
+										String fileToDelete = fileService.validateDirectoryPath(curDirTextField.getText(), selectedItem.getName());
+										fileService.deleteFile(fileToDelete, progressController);
+										Platform.runLater(new Runnable() {
+										    public void run() {
+										        main.closeProgressStage();
+										        progressController.setProgress(0);
+										        try {
+													updateDirectoryContent(curDirTextField.getText());
+												} catch (IOException e) {
+													e.printStackTrace();
+												}
+										    }
+										});
+										return null;
+									}
+								};
+								
+								Thread th = new Thread(task);
+								th.setDaemon(true);
+								th.start();
+							}
+						}
+					}
+					/////////////////////////////////////// MOVE JDIR //////////////////////////////////////////////////////////////////////////
+					else if(keyEvent.getCode().equals(KeyCode.F6)) {
+						String moveFromPath = fileService.validateDirectoryPath(curDirTextField.getText(), selectedItem.getName());
+						moveController.setTextFieldMoveFrom(moveFromPath);
+						
+						if (selectedItem.getSize().equals("<DIR>")) {
+							System.out.println("Directory");
+							main.showMoveScreenStage();
+							String moveTo = fileService.validateDirectoryPath(curDirTextField1.getText(), selectedItem.getName());
+							moveController.setPathTextFieldText(moveTo);
+							
+						} else {
+							System.out.println("Copying file.");
+							
+							 main.showMoveScreenStage();
+							 String moveTo = fileService.validateDirectoryPath(curDirTextField1.getText(), selectedItem.getName());
+							 moveController.setPathTextFieldText(moveTo);
+						}
+					}
+				}
+			}
+		});
+	}
+	
+	
+	public void onJDirectoryTable1KeyEvent() throws IOException {
+		
+		copyController.setJCommaderMainController(this);
+		moveController.setJCommaderMainController(this);
+
+		jDirectoryTable1.setOnKeyPressed(new EventHandler<KeyEvent>() {
+			@Override
+			public void handle(final KeyEvent keyEvent) {
+				final JFile selectedItem = jDirectoryTable1.getSelectionModel().getSelectedItem();
+
+				if (selectedItem != null) {
+					/////////////////////COPY JDIR1////////////////////////////////////////
+					if (keyEvent.getCode().equals(KeyCode.F5)) {
+
+							String copyFromPath = fileService.validateDirectoryPath(curDirTextField1.getText(), selectedItem.getName());
+							copyController.setTextFieldCopyFrom(copyFromPath);
+
+							if (selectedItem.getSize().equals("<DIR>")) {
+								System.out.println("Directory");
+								main.showCopyScreenStage();
+								copyController.setTextLabelCopyTo("To: ");
+								String copyTo = fileService.validateDirectoryPath(curDirTextField.getText(), selectedItem.getName());
+								copyController.setPathTextFieldText(copyTo);
+								
+							} else {
+								System.out.println("Copying file.");
+								
+								 main.showCopyScreenStage();
+								 copyController.setTextLabelCopyTo("To: ");
+								 String copyTo = fileService.validateDirectoryPath(curDirTextField.getText(), selectedItem.getName());
+								 copyController.setPathTextFieldText(copyTo);
+								 
+							}
+				    //////////////////////DELETE JDIR1////////////////////////////////////////
+					} else if(keyEvent.getCode().equals(KeyCode.DELETE)) {
+						
+						
+						Alert alert = new Alert(AlertType.CONFIRMATION);
+						alert.setTitle("Deleting");
+						alert.setHeaderText("Deleting: " + selectedItem.getName());
+						alert.setContentText("Are you sure?");
+
+						Optional<ButtonType> result = alert.showAndWait();
+
+						if (result.get() == ButtonType.OK) {
+
+							main.showProgressStage();
+							ProgressBarController progressController = main.getProgressController();
+							progressController.setTextLabel("Deleting: " + selectedItem.getName());
+
+							if (selectedItem.getSize().equals("<DIR>")) {
+								
+								Task<Void> task = new Task<Void>() {
+									@Override
+									public Void call() throws InterruptedException, IOException {
+										String directoryToDelete = fileService.validateDirectoryPath(curDirTextField1.getText(), selectedItem.getName());
+										double filesInDirectoryCounter = fileService.getFilesInDirectoryCount(directoryToDelete);
+										fileService.deleteDirectory(directoryToDelete, progressController, filesInDirectoryCounter);
+										Platform.runLater(new Runnable() {
+										    public void run() {
+										        main.closeProgressStage();
+										        try {
+													updateDirectory1Content(curDirTextField1.getText());
+												} catch (IOException e) {
+													e.printStackTrace();
+												}
+										    }
+										});
+										return null;
+									}
+								};
+
+								Thread th = new Thread(task);
+								th.setDaemon(true);
+								th.start();
+								
+							} else {
+								System.out.println("Deleting file.");
+								
+								Task<Void> task = new Task<Void>() {
+									@Override
+									public Void call() throws InterruptedException, IOException {
+										String fileToDelete = fileService.validateDirectoryPath(curDirTextField1.getText(), selectedItem.getName());
+										fileService.deleteFile(fileToDelete, progressController);
+										Platform.runLater(new Runnable() {
+										    public void run() {
+										        main.closeProgressStage();
+										        try {
+													updateDirectory1Content(curDirTextField1.getText());
+												} catch (IOException e) {
+													e.printStackTrace();
+												}
+										    }
+										});
+										return null;
+									}
+								};
+								
+								Thread th = new Thread(task);
+								th.setDaemon(true);
+								th.start();
+							}
+						}
+					} /////////////////////////////////////// MOVE JDIR //////////////////////////////////////////////////////////////////////////
+					else if(keyEvent.getCode().equals(KeyCode.F6)) {
+						String moveFromPath = fileService.validateDirectoryPath(curDirTextField1.getText(), selectedItem.getName());
+						moveController.setTextFieldMoveFrom(moveFromPath);
+						
+						if (selectedItem.getSize().equals("<DIR>")) {
+							System.out.println("Directory");
+							main.showMoveScreenStage();
+							String moveTo = fileService.validateDirectoryPath(curDirTextField.getText(), selectedItem.getName());
+							moveController.setPathTextFieldText(moveTo);
+							
+						} else {
+							System.out.println("Copying file.");
+							
+							 main.showMoveScreenStage();
+							 String moveTo = fileService.validateDirectoryPath(curDirTextField.getText(), selectedItem.getName());
+							 moveController.setPathTextFieldText(moveTo);
+						}
+					}
+				}
+			}
+		});
+	} 
+    
+    public void onCurDirTextField1Enter() throws IOException {
+    	
+    	curDirTextField1.setOnKeyPressed(new EventHandler<KeyEvent>()
+        {
+            @Override
+            public void handle(KeyEvent ke)
+            {
+                if (ke.getCode().equals(KeyCode.ENTER))
+                {
+                	if(fileService.checkDirectoryExistance(curDirTextField1.getText())) {
+                		try {
+							jDirectoryTable1.setItems(fileService.getDirectoriesAndFiles(curDirTextField1.getText()));
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+                	}
+                }
+            }
         });
     }
     
@@ -154,7 +518,7 @@ public class JCommanderMainController {
                 {
                 	if(fileService.checkDirectoryExistance(curDirTextField.getText())) {
                 		try {
-							jDirectoryTable.setItems(fileService.getFilesForDirectory(curDirTextField.getText()));
+							jDirectoryTable.setItems(fileService.getDirectoriesAndFiles(curDirTextField.getText()));
 						} catch (IOException e) {
 							e.printStackTrace();
 						}
@@ -164,26 +528,134 @@ public class JCommanderMainController {
         });
     }
     
-    public void onCurDirTextField1Enter() throws IOException {
-    	
-    	curDirTextField1.setOnKeyPressed(new EventHandler<KeyEvent>()
-        {
-            @Override
-            public void handle(KeyEvent ke)
-            {
-                if (ke.getCode().equals(KeyCode.ENTER))
-                {
-                	if(fileService.checkDirectoryExistance(curDirTextField1.getText())) {
-                		try {
-							jDirectoryTable1.setItems(fileService.getFilesForDirectory(curDirTextField1.getText()));
-						} catch (IOException e) {
+    public void listenTableDoubleClick() {
+    	jDirectoryTable.setRowFactory( tv -> {
+    	    TableRow<JFile> row = new TableRow<JFile>();
+    	    row.setOnMouseClicked(event -> {
+    	        if (event.getClickCount() == 2 && (! row.isEmpty()) ) {
+    	            JFile rowData = row.getItem();
+    	            if(rowData.getSize().equals("<DIR>")) {
+        	            curDirTextField.setText(curDirTextField.getText() + rowData.getName() +  File.separator);
+    					try {
+							jDirectoryTable.setItems(fileService.getDirectoriesAndFiles(curDirTextField.getText()));
+						} catch (Exception e) {
 							e.printStackTrace();
 						}
-                	}
-                }
-            }
-        });
+    	            }
+    	        }
+    	    });
+    	    return row ;
+    	});
     }
+    
+    public void listenTable1DoubleClick() {
+    	jDirectoryTable1.setRowFactory( tv -> {
+    	    TableRow<JFile> row = new TableRow<JFile>();
+    	    row.setOnMouseClicked(event -> {
+    	        if (event.getClickCount() == 2 && (! row.isEmpty()) ) {
+    	            JFile rowData = row.getItem();
+    	            if(rowData.getSize().equals("<DIR>")) {
+        	            curDirTextField1.setText(curDirTextField1.getText() + rowData.getName() +  File.separator);
+    					try {
+							jDirectoryTable1.setItems(fileService.getDirectoriesAndFiles(curDirTextField1.getText()));
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+    	            }
+    	        }
+    	    });
+    	    return row ;
+    	});
+    }
+    
+    public void listenButton() {
+    	button.addEventHandler(ActionEvent.ACTION, new EventHandler<ActionEvent>() {
+    	    @Override
+    	    public void handle(ActionEvent actionEvent) {
+    	        String path = curDirTextField.getText();
+    	        if(!rootService.checkIfRootPath(path)) {
+    	        	File file = new File(path);
+    	        	try {
+						String absolutePath = file.getAbsolutePath();
+						String finalPath = absolutePath.replace(file.getName(), "");
+						curDirTextField.setText(finalPath);
+						jDirectoryTable.setItems(fileService.getDirectoriesAndFiles(finalPath));
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+    	        }
+    	    }
+    	});
+    }
+    
+    public void listenButton1() {
+    	button1.addEventHandler(ActionEvent.ACTION, new EventHandler<ActionEvent>() {
+    	    @Override
+    	    public void handle(ActionEvent actionEvent) {
+    	        String path = curDirTextField1.getText();
+    	        if(!rootService.checkIfRootPath(path)) {
+    	        	File file = new File(path);
+    	        	try {
+						String absolutePath = file.getAbsolutePath();
+						String finalPath = absolutePath.replace(file.getName(), "");
+						curDirTextField1.setText(finalPath);
+						jDirectoryTable1.setItems(fileService.getDirectoriesAndFiles(finalPath));
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+    	        }
+    	    }
+    	});
+    }
+    
+    public void updateJCommanderMainLocale(ResourceBundle bundle) {
+    	nameColumn.setText(bundle.getString("label.name_column"));
+    	sizeColumn.setText(bundle.getString("label.size_column"));
+    	createDateColumn.setText(bundle.getString("label.date_column"));
+    	
+    	nameColumn1.setText(bundle.getString("label.name_column"));
+    	sizeColumn1.setText(bundle.getString("label.size_column"));
+    	createDateColumn1.setText(bundle.getString("label.date_column"));
+    }
+   
+    public void updateRootLocale(ResourceBundle bundle) {
+    	rootController.setTextFile(bundle.getString("label.file"));
+    	rootController.setTextExit(bundle.getString("label.exit"));
+    	rootController.setTextEnglish(bundle.getString("label.english"));
+    	rootController.setTextPolish(bundle.getString("label.polish"));
+    	rootController.setTextLanguage(bundle.getString("label.language"));
+    }
+    
+    
+    public void updateCopyLocale(ResourceBundle bundle) {
+    	copyController.getLabelCopyFrom().setText("label.copyFrom");
+    	copyController.getLabelCopyTo().setText("label.copyTo");
+    	copyController.getCopyButton().setText("label.copyButton");
+    	copyController.getCancelButton().setText("label.cancelButton");
+    	copyController.setDirectoryAlertContextText("label.directoryLabeContextText");
+    	copyController.setDirectoryAlertHeader("label.directoryAlertHeader");
+    	copyController.setFileAlertContextText("label.fileLabeContextText");
+    	copyController.setFileAlertHeader("label.fileAlertHeader");
+    }
+    
+    public void updateMoveLocale(ResourceBundle bundle) {
+    	
+    }
+
+    
+	Menu file;
+	
+	@FXML
+	Menu language;
+	
+	@FXML
+	CheckMenuItem polish;
+	
+	@FXML
+	CheckMenuItem english;
+	
+	@FXML
+	MenuItem exit;
     
 	
 

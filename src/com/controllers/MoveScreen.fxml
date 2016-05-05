@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.BorderPane?>
+
+<BorderPane xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.controllers.MoveScreenController">
+   <center>
+      <AnchorPane prefHeight="165.0" prefWidth="492.0" BorderPane.alignment="CENTER">
+         <children>
+            <Button fx:id="moveButton" layoutX="156.0" layoutY="125.0" mnemonicParsing="false" onAction="#listenMoveButton" text="Move" />
+            <Button fx:id="cancelButton" layoutX="271.0" layoutY="125.0" mnemonicParsing="false" onAction="#listenCancelButton" prefHeight="20.0" prefWidth="52.0" text="Cancel" />
+            <TextField fx:id="textFieldMoveFrom" layoutX="97.0" layoutY="35.0" prefHeight="25.0" prefWidth="347.0" />
+            <TextField fx:id="pathTextField" layoutX="97.0" layoutY="72.0" prefHeight="25.0" prefWidth="346.0" />
+            <Label layoutX="28.0" layoutY="39.0" text="Move from:" />
+            <Label fx:id="labelMoveTo" layoutX="74.0" layoutY="76.0" text="To:" />
+         </children>
+      </AnchorPane>
+   </center>
+</BorderPane>

@@ -16,17 +16,38 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.controllers.CopyScreenController;
+import com.controllers.ProgressBarController;
 import com.domain.JFile;
 
+import application.Main;
+import javafx.beans.property.ReadOnlyLongWrapper;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ProgressBar;
+import javafx.scene.control.Alert.AlertType;
 
 public class JFileService {
 	
 	//JDirectoryService directoryService= new JDirectoryService();
 	
+    private final ReadOnlyLongWrapper filesDeleted = new ReadOnlyLongWrapper();
+    private double totalFilesCounter;
+    private double total = 0;
+    
+    public void setTotal(double total) {
+    	this.total = total;
+    }
+    
+   // private final ReadOnlyLongWrapper filesToDelete = new ReadOnlyLongWrapper();
+	
+	public final long getFilesDeleted() {
+		return filesDeleted.get();
+	}
+
 	public ObservableList<JFile> getDirectoriesAndFiles(String dirPath) throws IOException {
 		ObservableList<JFile> directories = getDirectoriesInDirectory(dirPath);
 		ObservableList<JFile> files = getFilesForDirectory(dirPath);
@@ -45,7 +66,8 @@ public class JFileService {
 					JFile jFile = new JFile();
 					jFile.setName(file.getName());
 					jFile.setSize(String.valueOf(getFileSize(fPath + File.separator + file.getName())));
-					jFile.setFileTime(getFileCreateDate(fPath + File.separator + file.getName()));
+					//SimpleDateFormat format1 = new SimpleDateFormat("yyyy-MM-dd");
+					jFile.setFileTime(String.valueOf(getFileCreateDate(fPath + File.separator + file.getName())));
 					files.add(jFile);
 				}
 			}
@@ -55,21 +77,21 @@ public class JFileService {
 	}
 	
 	
-	public FileTime getFileCreateDate(String filePath) {
+	public String getFileCreateDate(String filePath) {
 		Path path = Paths.get(filePath);
 		BasicFileAttributes attr;
 		FileTime fileTime = null;
-
+		String time = "";
 		//if(checkFileExistance(filePath)) {
 			try {
 				attr = Files.readAttributes(path, BasicFileAttributes.class);
 				fileTime = attr.creationTime();
-
+				time = fileTime.toString();
 			} catch (IOException e) {
-				System.out.println("oops error! " + e.getMessage());
+				System.out.println(e.getMessage());
 			}
 		//}
-		return fileTime;
+		return time;
 	}
 	
 	public long getFileSize(String filePath) {
@@ -90,27 +112,32 @@ public class JFileService {
 	}
 	
 	
-	public boolean copyFile(String sourceFilePath, String destinationFilePath) {
+	public boolean copyFile(String sourceFilePath, String destinationFilePath, CopyScreenController controller) {
+		
 
 		InputStream inStream = null;
 		OutputStream outStream = null;
 		boolean result = false;
 
 		try {
-			
 			File afile = new File(sourceFilePath);
 			File bfile = new File(destinationFilePath);
-
+			
 			inStream = new FileInputStream(afile);
 			outStream = new FileOutputStream(bfile);
-
+			
 			byte[] buffer = new byte[1024];
 
 			int length;
+			double fileSize = getFileSize(sourceFilePath);
+			double total = 0.0;
+			
 			while ((length = inStream.read(buffer)) > 0) {
+				total += length;
 				outStream.write(buffer, 0, length);
+				controller.setProgress(total/fileSize);
 			}
-
+			
 			inStream.close();
 			outStream.close();
 
@@ -118,8 +145,12 @@ public class JFileService {
 			result = true;
 
 		} catch (IOException e) {
+			
+			Alert alert = new Alert(AlertType.ERROR);
+			alert.setTitle("Access denied.");
+			alert.setContentText("Access to directory denied.");
 			e.printStackTrace();
-		}
+		}	
 		return result;
 	}
 	
@@ -139,12 +170,13 @@ public class JFileService {
     	return result;
 	}
 	
-	public boolean deleteFile(String filePath) {
+	public boolean deleteFile(String filePath, ProgressBarController progressController) {
 		boolean result = false;
 		try {
 			File file = new File(filePath);
 			if(file.delete()) {
 				System.out.println("File deleted successfully!");
+				progressController.setProgress(1);
 				result = true;
 			}
 		}catch(Exception e){
@@ -194,7 +226,7 @@ public class JFileService {
 	}
 	
 	
-	public boolean copyDirectory(String sourcePath, String destinationPath) throws IOException {
+	public boolean copyDirectory(String sourcePath, String destinationPath, CopyScreenController controller, double directorySize) throws IOException {
 		File src = new File(sourcePath);
 		File dest = new File(destinationPath);
 		boolean result = false;
@@ -203,7 +235,6 @@ public class JFileService {
 
 			if (!dest.exists()) {
 				dest.mkdir();
-				System.out.println("Directory copied from " + src + "  to " + dest);
 			}
 
 			String files[] = src.list();
@@ -211,7 +242,7 @@ public class JFileService {
 			for (String file : files) {
 				File srcFile = new File(src, file);
 				File destFile = new File(dest, file);
-				copyDirectory(srcFile.getAbsolutePath(), destFile.getAbsolutePath());
+				copyDirectory(srcFile.getAbsolutePath(), destFile.getAbsolutePath(), controller, directorySize);
 			}
 
 		} else {
@@ -222,14 +253,18 @@ public class JFileService {
 
 			int length;
 			while ((length = in.read(buffer)) > 0) {
-				out.write(buffer, 0, length); 
+				total += length;
+				out.write(buffer, 0, length);
 			}
-
+			
+			System.out.println((total/directorySize));
+			controller.setProgress( (total/directorySize));
+			
 			in.close();	 
 			out.close();
 			result = true;
-			System.out.println("File copied from " + src + " to " + dest);
 		}
+		//total = 0;
 		return result;
 	}
 	
@@ -250,18 +285,35 @@ public class JFileService {
     	return result;
 	}
 	
-	public boolean deleteDirectory(String dirPath) {
+	public double getFilesInDirectoryCount(String directoryPath) {
+		  File file = new File(directoryPath);
+		  File[] files = file.listFiles();
+		  long count = 0;
+		  for (File f : files)
+		    if (f.isDirectory())
+		      count += getFilesInDirectoryCount(f.getAbsolutePath());
+		    else
+		      count++;
+
+		  return count;
+	}
+	
+	public boolean deleteDirectory(String dirPath, ProgressBarController controller, double filesInDirectoryCounter) throws IOException {
 		File directory = new File(dirPath);
-		
 	    if(directory.exists()){
+	    	
 	        File[] files = directory.listFiles();
+	        
 	        if(null!=files){
 	            for(int i=0; i < files.length; i++) {
 	                if(files[i].isDirectory()) {
-	                    deleteDirectory(files[i].getAbsolutePath());
+	                    deleteDirectory(files[i].getAbsolutePath(), controller, filesInDirectoryCounter);
 	                }
 	                else {
 	                    files[i].delete();
+	                    totalFilesCounter++;
+	                    filesDeleted.set((long) totalFilesCounter);
+	                    controller.setProgress(totalFilesCounter/filesInDirectoryCounter);
 	                }
 	            }
 	        }
@@ -269,15 +321,28 @@ public class JFileService {
 	    return(directory.delete());
 	}
 	
-	
-	/*public List<String> changeDateFormat(ObservableList<JFile> files, String format) {
-		List<String>
-		for(JFile file : files) {
-			Date date = new Date(file.getFileTime().toMillis());
-			String modified = new SimpleDateFormat(format).format(date);
+	public String validateDirectoryPath(String path, String direcotryName) {
+		String finalPath = "";
+		if(path.endsWith(File.separator)) {
+			finalPath = path + direcotryName;
+		} else {
+			finalPath += path + File.separator + direcotryName;
 		}
 		
-	}*/
+		return finalPath;
+	}
+	
+	public double getDirectorySize(File directory) {
+	    double length = 0;
+	    for (File file : directory.listFiles()) {
+	        if (file.isFile())
+	            length += file.length();
+	        else
+	            length += getDirectorySize(file);
+	    }
+	    return length;
+	}
+	
 	
 	
 	

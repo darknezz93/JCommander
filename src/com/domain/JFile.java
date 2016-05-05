@@ -14,16 +14,16 @@ public class JFile{
 	
 	protected StringProperty name;
 	private StringProperty size;
-	private final ObjectProperty<FileTime> fileTime;
+	private final SimpleStringProperty fileTime;
 	
 	public JFile() {
 		this("", "", null);
 	}
 	
-	public JFile(String name, String size, FileTime time) {
+	public JFile(String name, String size, String time) {
 		this.name = new SimpleStringProperty(name);
 		this.size = new SimpleStringProperty(size);
-		this.fileTime = new SimpleObjectProperty<FileTime>(time);
+		this.fileTime = new SimpleStringProperty(time);
 	}
 	
 	public StringProperty nameProperty() {
@@ -49,15 +49,15 @@ public class JFile{
 		this.size.set(size);;
 	}
 	
-	public ObjectProperty<FileTime> fileTimeProperty() {
+	public StringProperty fileTimeProperty() {
 		return fileTime;
 	}
 	
-	public FileTime getFileTime() {
+	public String getFileTime() {
 		return fileTime.get();
 	}
 
-	public void setFileTime(FileTime fileTime) {
+	public void setFileTime(String fileTime) {
 		this.fileTime.set(fileTime);
 	}
 
