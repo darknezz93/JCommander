@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.text.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane prefHeight="531.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.controllers.JCommanderMainController">
+   <children>
+      <SplitPane dividerPositions="0.5" layoutX="-14.0" prefHeight="600.0" prefWidth="700.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <items>
+          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+               <children>
+                  <TableView fx:id="jDirectoryTable" layoutX="58.0" layoutY="21.0" prefHeight="477.0" prefWidth="346.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="21.0">
+                    <columns>
+                      <TableColumn fx:id="nameColumn" prefWidth="147.0" text="Name" />
+                      <TableColumn fx:id="sizeColumn" prefWidth="93.0" text="Size" />
+                        <TableColumn fx:id="createDateColumn" prefWidth="124.0" text="Create date" />
+                    </columns>
+                     <columnResizePolicy>
+                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                     </columnResizePolicy>
+                  </TableView>
+                  <ComboBox fx:id="jRootComboBox" layoutY="-4.0" maxWidth="79.0" minWidth="79.0" prefHeight="25.0" prefWidth="79.0" AnchorPane.leftAnchor="0.0" />
+                  <TextField fx:id="curDirTextField" layoutX="112.0" layoutY="-4.0" maxWidth="450.0" prefHeight="25.0" prefWidth="284.0" AnchorPane.leftAnchor="112.0" AnchorPane.rightAnchor="0.0" />
+                  <Button fx:id="button" layoutX="79.0" layoutY="-4.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="34.0" text="&lt;" textAlignment="CENTER">
+                     <font>
+                        <Font name="Britannic Bold" size="12.0" />
+                     </font>
+                  </Button>
+               </children>
+            </AnchorPane>
+          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+               <children>
+                  <TableView fx:id="jDirectoryTable1" layoutX="73.0" layoutY="21.0" prefHeight="508.0" prefWidth="396.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="21.0">
+                    <columns>
+                      <TableColumn fx:id="nameColumn1" prefWidth="75.0" text="Name" />
+                      <TableColumn fx:id="sizeColumn1" prefWidth="75.0" text="Size" />
+                        <TableColumn fx:id="createDateColumn1" prefWidth="75.0" text="Create date" />
+                    </columns>
+                     <columnResizePolicy>
+                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                     </columnResizePolicy>
+                  </TableView>
+                  <ComboBox fx:id="jRootComboBox1" layoutY="-4.0" maxWidth="79.0" prefHeight="25.0" prefWidth="79.0" AnchorPane.leftAnchor="0.0" />
+                  <TextField fx:id="curDirTextField1" layoutX="112.0" layoutY="-4.0" maxWidth="450.0" prefHeight="25.0" prefWidth="284.0" AnchorPane.leftAnchor="112.0" AnchorPane.rightAnchor="0.0" />
+                  <Button fx:id="button1" layoutX="79.0" layoutY="-4.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="34.0" text="&lt;" textAlignment="CENTER">
+                     <font>
+                        <Font name="Britannic Bold" size="12.0" />
+                     </font>
+                  </Button>
+               </children>
+            </AnchorPane>
+        </items>
+      </SplitPane>
+   </children>
+</AnchorPane>

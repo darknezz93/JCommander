@@ -155,23 +155,31 @@ public class RootLayoutController {
 		Platform.exit();
 	}
 	
-	public void listenPolish() {
+	public void listenPolish() throws IOException {
 		english.setSelected(false);
 		loadLang("pl");
+		jMainController.setResourceBundle(bundle);
 		jMainController.updateJCommanderMainLocale(bundle);
 		jMainController.updateRootLocale(bundle);
 		jMainController.updateMoveLocale(bundle);
 		jMainController.updateCopyLocale(bundle);
+		jMainController.updateMoveLocale(bundle);
+		jMainController.updateProgressBarLocale(bundle);
+		jMainController.updateDateFormat("yyyy-MM-dd");
 		System.out.println("Zmieniam na polski");
 	}
 	
-	public void listenEnglish() {
+	public void listenEnglish() throws IOException {
 		polish.setSelected(false);
 		loadLang("en");
+		jMainController.setResourceBundle(bundle);
 		jMainController.updateJCommanderMainLocale(bundle);
 		jMainController.updateRootLocale(bundle);
 		jMainController.updateMoveLocale(bundle);
 		jMainController.updateCopyLocale(bundle);
+		jMainController.updateMoveLocale(bundle);
+		jMainController.updateProgressBarLocale(bundle);
+		jMainController.updateDateFormat("MM/dd/yyyy");
 		System.out.println("Zmieniam na angielski");
 	}
 	

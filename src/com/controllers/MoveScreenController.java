@@ -29,6 +29,9 @@ public class MoveScreenController {
 	private Label labelMoveTo;
 	
 	@FXML
+	private Label labelMoveFrom;
+	
+	@FXML
 	private TextField pathTextField;
 
 	@FXML
@@ -86,113 +89,122 @@ public class MoveScreenController {
     }
     
 	public void listenMoveButton() {
-		
+
 		MoveScreenController controller = this;
 
-	//	moveButton.addEventHandler(ActionEvent.ACTION, new EventHandler<ActionEvent>() {
-		//	@Override
-		//	public void handle(ActionEvent actionEvent) {
-				
-				System.out.println("Moveing");
-				String copyFrom = textFieldMoveFrom.getText();
-				String copyTo = pathTextField.getText();
+		System.out.println("Moveing");
+		String copyFrom = textFieldMoveFrom.getText();
+		String copyTo = pathTextField.getText();
 
-				File file = new File(copyTo);
-				File fileFrom = new File(copyFrom);
+		File file = new File(copyTo);
+		File fileFrom = new File(copyFrom);
 
-				boolean move = true;
+		boolean move = true;
 
-				if (file.exists()) {
-					Alert alert = new Alert(AlertType.CONFIRMATION);
-					alert.setTitle("Confirm");
-					if (file.isDirectory()) {
-						alert.setHeaderText("Directory exists in selected location");
-						alert.setContentText("Replace existing directory?");
-					} else {
-						alert.setHeaderText("File exists in selected location");
-						alert.setContentText("Replace existing file?");
-					}
+		if (file.exists()) {
+			Alert alert = new Alert(AlertType.CONFIRMATION);
+			alert.setTitle("Confirm");
+			if (file.isDirectory()) {
+				alert.setHeaderText("Directory exists in selected location");
+				alert.setContentText("Replace existing directory?");
+			} else {
+				alert.setHeaderText("File exists in selected location");
+				alert.setContentText("Replace existing file?");
+			}
 
-					Optional<ButtonType> result = alert.showAndWait();
+			Optional<ButtonType> result = alert.showAndWait();
 
-					if (result.get() == ButtonType.CANCEL) {
+			if (result.get() == ButtonType.CANCEL) {
 
-						main.closeCopyScreenStage();
-						move = false;
-					}
-				}
+				main.closeCopyScreenStage();
+				move = false;
+			}
+		}
 
-				if (move) {
+		if (move) {
 
-					if (fileFrom.isDirectory()) {
-						Task<Void> task = new Task<Void>() {
-							@Override
-							public Void call() throws InterruptedException, IOException {		
-								System.out.println("Moving dir " +  copyFrom);
-								fileService.moveDirectory(copyFrom, copyTo);
-								System.out.println("sucess " + copyTo);
-								Platform.runLater(new Runnable() {
-									public void run() {
-										try {
-											jMainController.updateDirectory1Content();
-											jMainController.updateDirectoryContent();
-											main.closeMoveScreenStage();
-										} catch (IOException e) {
-											e.printStackTrace();
-										}
+			if (fileFrom.isDirectory()) {
+				Task<Void> task = new Task<Void>() {
+					@Override
+					public Void call() throws InterruptedException, IOException {
+						System.out.println("Moving dir " + copyFrom);
+						fileService.moveDirectory(copyFrom, copyTo);
+						System.out.println("sucess " + copyTo);
+						Platform.runLater(new Runnable() {
+							public void run() {
+								try {
+									jMainController.updateDirectory1Content();
+									jMainController.updateDirectoryContent();
+									main.closeMoveScreenStage();
+								} catch (IOException e) {
+									e.printStackTrace();
+								}
 
-									}
-								});
-								return null;
 							}
-						};
-
-						th = new Thread(task);
-						th.setDaemon(true);
-						th.start();
-
-					} else {
-
-						Task<Void> task = new Task<Void>() {
-							@Override
-							public Void call() throws InterruptedException, IOException {
-								
-								fileService.moveFile(copyFrom, copyTo);
-								
-								Platform.runLater(new Runnable() {
-									public void run() {
-										try {
-											jMainController.updateDirectory1Content();
-											jMainController.updateDirectoryContent();
-											main.closeMoveScreenStage();
-										} catch (IOException e) {
-											e.printStackTrace();
-										}
-
-									}
-								});
-
-								return null;
-							}
-						};
-
-						th = new Thread(task);
-						th.setDaemon(true);
-						th.start();
+						});
+						return null;
 					}
+				};
 
-				}
-		//	}
-		//});
+				th = new Thread(task);
+				th.setDaemon(true);
+				th.start();
+
+			} else {
+
+				Task<Void> task = new Task<Void>() {
+					@Override
+					public Void call() throws InterruptedException, IOException {
+
+						fileService.moveFile(copyFrom, copyTo);
+
+						Platform.runLater(new Runnable() {
+							public void run() {
+								try {
+									jMainController.updateDirectory1Content();
+									jMainController.updateDirectoryContent();
+									main.closeMoveScreenStage();
+								} catch (IOException e) {
+									e.printStackTrace();
+								}
+
+							}
+						});
+
+						return null;
+					}
+				};
+
+				th = new Thread(task);
+				th.setDaemon(true);
+				th.start();
+			}
+
+		}
+
 	}
+	
+	public void setTextMoveButton(String text) {
+		this.moveButton.setText(text);
+	}
+	
+	public void setTextCancelButton(String text) {
+		this.cancelButton.setText(text);
+	}
+	
+	
     
 	public void setTextFieldMoveFrom(String text) {
 		this.textFieldMoveFrom.setText(text);
 	}
 	
+	public void setTextLabelMoveFrom(String text) {
+		this.labelMoveFrom.setText(text);
+	}
+	
 
 	
-	public void setTextLabelCMoveTo(String text) {
+	public void setTextLabelMoveTo(String text) {
 		this.labelMoveTo.setText(text);
 	}
 	

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.BorderPane?>
+
+<BorderPane prefHeight="500.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.controllers.RootLayoutController">
+   <top>
+      <MenuBar BorderPane.alignment="CENTER">
+        <menus>
+          <Menu fx:id="file" mnemonicParsing="false" text="File">
+            <items>
+              <MenuItem fx:id="exit" mnemonicParsing="false" onAction="#listenFileExit" text="Close" />
+            </items>
+          </Menu>
+          <Menu fx:id="language" mnemonicParsing="false" text="Language">
+               <items>
+                  <CheckMenuItem fx:id="polish" mnemonicParsing="false" onAction="#listenPolish" text="Polish" />
+                  <CheckMenuItem fx:id="english" mnemonicParsing="false" onAction="#listenEnglish" text="English" />
+               </items>
+          </Menu>
+        </menus>
+      </MenuBar>
+   </top>
+</BorderPane>

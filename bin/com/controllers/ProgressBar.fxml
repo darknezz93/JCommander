@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.BorderPane?>
+
+<BorderPane xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.controllers.ProgressBarController">
+   <center>
+      <AnchorPane prefHeight="200.0" prefWidth="447.0" BorderPane.alignment="CENTER">
+         <children>
+            <ProgressBar fx:id="progressBar" layoutX="42.0" layoutY="82.0" prefHeight="18.0" prefWidth="349.0" progress="0.0" />
+            <Button fx:id="cancelButton" layoutX="191.0" layoutY="130.0" mnemonicParsing="false" onAction="#listenCancelButton" prefHeight="25.0" prefWidth="58.0" text="Cancel" />
+            <Label fx:id="label" layoutX="42.0" layoutY="27.0" prefHeight="17.0" prefWidth="352.0" text="Label" />
+         </children>
+      </AnchorPane>
+   </center>
+</BorderPane>

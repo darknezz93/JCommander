@@ -107,13 +107,19 @@ public class JCommanderMainController {
 	private Label createDateLabel;
 	
 	@FXML
-	private ProgressBarController progressBarController = new ProgressBarController();
+	private ProgressBarController progressBarController;
 	
 	@FXML
 	private Label progressBarLabel;
 	
 	@FXML
 	private Button progressBarCancel;
+	
+	private String dateFormat = "MM/dd/yyyy";
+	
+	public void setDateFormat(String dateFormat) {
+		this.dateFormat = dateFormat;
+	}
 	
 	
 	private Main main;
@@ -129,9 +135,15 @@ public class JCommanderMainController {
 	
 	private ResourceBundle resourceBundle;
 	
+	private ObservableList<JFile> all;
+	
 		
 	public JCommanderMainController() {
 		
+	}
+	
+	public void setResourceBundle(ResourceBundle bundle) {
+		this.resourceBundle = bundle;
 	}
 	
 	@FXML
@@ -152,6 +164,7 @@ public class JCommanderMainController {
         rootController.setJCommaderMainController(this);
 		copyController = main.getCopyScreenController();
 	    moveController = main.getMoveScreenController();
+	    progressBarController = main.getProgressController();
         initializeComponents();
         
         main.getRootController().getEnglish().setSelected(true);
@@ -165,14 +178,17 @@ public class JCommanderMainController {
         listenButton1();
         onJDirectoryTableKeyEvent();
         onJDirectoryTable1KeyEvent();
-        
 
-   
+    }
+    
+    public void setElementsDateFormat(String dateFormat) throws IOException {
+    	all = fileService.getDirectoriesAndFiles(rootService.getSystemRoots().get(0), dateFormat);
     }
     
     public void initializeComponents() throws IOException {
-        ObservableList<JFile> all = fileService.getDirectoriesAndFiles(rootService.getSystemRoots().get(0));
+        all = fileService.getDirectoriesAndFiles(rootService.getSystemRoots().get(0), dateFormat);
         // Add observable list data to the table
+        rootController.listenEnglish();
         jDirectoryTable.setItems(all);
         jDirectoryTable1.setItems(all);
         jRootComboBox.setItems(rootService.getSystemRoots());
@@ -184,22 +200,22 @@ public class JCommanderMainController {
     }
     
     public void updateDirectoryContent(String dirPath) throws IOException {
-    	ObservableList<JFile> all = fileService.getDirectoriesAndFiles(dirPath);
+    	ObservableList<JFile> all = fileService.getDirectoriesAndFiles(dirPath, dateFormat);
     	jDirectoryTable.setItems(all);
     }
     
     public void updateDirectoryContent() throws IOException {
-    	ObservableList<JFile> all = fileService.getDirectoriesAndFiles(curDirTextField.getText());
+    	ObservableList<JFile> all = fileService.getDirectoriesAndFiles(curDirTextField.getText(), dateFormat);
     	jDirectoryTable.setItems(all);
     }
     
     public void updateDirectory1Content(String dirPath) throws IOException {
-    	ObservableList<JFile> all = fileService.getDirectoriesAndFiles(dirPath);
+    	ObservableList<JFile> all = fileService.getDirectoriesAndFiles(dirPath, dateFormat);
     	jDirectoryTable1.setItems(all);
     }
     
     public void updateDirectory1Content() throws IOException {
-    	ObservableList<JFile> all = fileService.getDirectoriesAndFiles(curDirTextField1.getText());
+    	ObservableList<JFile> all = fileService.getDirectoriesAndFiles(curDirTextField1.getText(), dateFormat);
     	jDirectoryTable1.setItems(all);
     }
     
@@ -207,7 +223,7 @@ public class JCommanderMainController {
         jRootComboBox.valueProperty().addListener(new ChangeListener<String>() {
             @Override public void changed(ObservableValue ov, String t, String t1) {
             	try {
-					jDirectoryTable.setItems(fileService.getDirectoriesAndFiles(jRootComboBox.getValue()));
+					jDirectoryTable.setItems(fileService.getDirectoriesAndFiles(jRootComboBox.getValue(), dateFormat));
 					curDirTextField.setText(jRootComboBox.getValue());
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -220,7 +236,7 @@ public class JCommanderMainController {
         jRootComboBox1.valueProperty().addListener(new ChangeListener<String>() {
             @Override public void changed(ObservableValue ov, String t, String t1) {
             	try {
-					jDirectoryTable1.setItems(fileService.getDirectoriesAndFiles(jRootComboBox1.getValue()));
+					jDirectoryTable1.setItems(fileService.getDirectoriesAndFiles(jRootComboBox1.getValue(), dateFormat));
 					curDirTextField1.setText(jRootComboBox1.getValue());
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -249,7 +265,7 @@ public class JCommanderMainController {
 							if (selectedItem.getSize().equals("<DIR>")) {
 								System.out.println("Directory");
 								main.showCopyScreenStage();
-								copyController.setTextLabelCopyTo("To: ");
+								//copyController.setTextLabelCopyTo("To: ");
 								String copyTo = fileService.validateDirectoryPath(curDirTextField1.getText(), selectedItem.getName());
 								copyController.setPathTextFieldText(copyTo);
 								
@@ -257,7 +273,7 @@ public class JCommanderMainController {
 								System.out.println("Copying file.");
 								
 								 main.showCopyScreenStage();
-								 copyController.setTextLabelCopyTo("To: ");
+								 //copyController.setTextLabelCopyTo("To: ");
 								 String copyTo = fileService.validateDirectoryPath(curDirTextField1.getText(), selectedItem.getName());
 								 copyController.setPathTextFieldText(copyTo);
 								 
@@ -266,9 +282,9 @@ public class JCommanderMainController {
 					else if (keyEvent.getCode().equals(KeyCode.DELETE)) {
 
 						Alert alert = new Alert(AlertType.CONFIRMATION);
-						alert.setTitle("Deleting");
-						alert.setHeaderText("Deleting: " + selectedItem.getName());
-						alert.setContentText("Are you sure?");
+						alert.setTitle(resourceBundle.getString("label.deleting.title"));
+						alert.setHeaderText(resourceBundle.getString("label.deleting") + selectedItem.getName());
+						alert.setContentText(resourceBundle.getString("label.confirm"));
 
 						Optional<ButtonType> result = alert.showAndWait();
 
@@ -276,7 +292,7 @@ public class JCommanderMainController {
 
 							main.showProgressStage();
 							ProgressBarController progressController = main.getProgressController();
-							progressController.setTextLabel("Deleting: " + selectedItem.getName());
+							progressController.setTextLabel(resourceBundle.getString("label.deleting") + selectedItem.getName());
 
 							if (selectedItem.getSize().equals("<DIR>")) {
 								
@@ -397,9 +413,9 @@ public class JCommanderMainController {
 						
 						
 						Alert alert = new Alert(AlertType.CONFIRMATION);
-						alert.setTitle("Deleting");
-						alert.setHeaderText("Deleting: " + selectedItem.getName());
-						alert.setContentText("Are you sure?");
+						alert.setTitle(resourceBundle.getString("label.deleting.title"));
+						alert.setHeaderText(resourceBundle.getString("label.deleting") + selectedItem.getName());
+						alert.setContentText(resourceBundle.getString("label.confirm"));
 
 						Optional<ButtonType> result = alert.showAndWait();
 
@@ -497,7 +513,7 @@ public class JCommanderMainController {
                 {
                 	if(fileService.checkDirectoryExistance(curDirTextField1.getText())) {
                 		try {
-							jDirectoryTable1.setItems(fileService.getDirectoriesAndFiles(curDirTextField1.getText()));
+							jDirectoryTable1.setItems(fileService.getDirectoriesAndFiles(curDirTextField1.getText(), dateFormat));
 						} catch (IOException e) {
 							e.printStackTrace();
 						}
@@ -518,7 +534,7 @@ public class JCommanderMainController {
                 {
                 	if(fileService.checkDirectoryExistance(curDirTextField.getText())) {
                 		try {
-							jDirectoryTable.setItems(fileService.getDirectoriesAndFiles(curDirTextField.getText()));
+							jDirectoryTable.setItems(fileService.getDirectoriesAndFiles(curDirTextField.getText(), dateFormat));
 						} catch (IOException e) {
 							e.printStackTrace();
 						}
@@ -537,7 +553,7 @@ public class JCommanderMainController {
     	            if(rowData.getSize().equals("<DIR>")) {
         	            curDirTextField.setText(curDirTextField.getText() + rowData.getName() +  File.separator);
     					try {
-							jDirectoryTable.setItems(fileService.getDirectoriesAndFiles(curDirTextField.getText()));
+							jDirectoryTable.setItems(fileService.getDirectoriesAndFiles(curDirTextField.getText(), dateFormat));
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
@@ -557,7 +573,7 @@ public class JCommanderMainController {
     	            if(rowData.getSize().equals("<DIR>")) {
         	            curDirTextField1.setText(curDirTextField1.getText() + rowData.getName() +  File.separator);
     					try {
-							jDirectoryTable1.setItems(fileService.getDirectoriesAndFiles(curDirTextField1.getText()));
+							jDirectoryTable1.setItems(fileService.getDirectoriesAndFiles(curDirTextField1.getText(), dateFormat));
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
@@ -579,7 +595,7 @@ public class JCommanderMainController {
 						String absolutePath = file.getAbsolutePath();
 						String finalPath = absolutePath.replace(file.getName(), "");
 						curDirTextField.setText(finalPath);
-						jDirectoryTable.setItems(fileService.getDirectoriesAndFiles(finalPath));
+						jDirectoryTable.setItems(fileService.getDirectoriesAndFiles(finalPath, dateFormat));
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -599,7 +615,7 @@ public class JCommanderMainController {
 						String absolutePath = file.getAbsolutePath();
 						String finalPath = absolutePath.replace(file.getName(), "");
 						curDirTextField1.setText(finalPath);
-						jDirectoryTable1.setItems(fileService.getDirectoriesAndFiles(finalPath));
+						jDirectoryTable1.setItems(fileService.getDirectoriesAndFiles(finalPath, dateFormat));
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -627,20 +643,37 @@ public class JCommanderMainController {
     }
     
     
-    public void updateCopyLocale(ResourceBundle bundle) {
-    	copyController.getLabelCopyFrom().setText("label.copyFrom");
-    	copyController.getLabelCopyTo().setText("label.copyTo");
-    	copyController.getCopyButton().setText("label.copyButton");
-    	copyController.getCancelButton().setText("label.cancelButton");
-    	copyController.setDirectoryAlertContextText("label.directoryLabeContextText");
-    	copyController.setDirectoryAlertHeader("label.directoryAlertHeader");
-    	copyController.setFileAlertContextText("label.fileLabeContextText");
-    	copyController.setFileAlertHeader("label.fileAlertHeader");
+    public void updateCopyLocale(ResourceBundle bundle) throws IOException {
+
+    	copyController.getLabelCopyFrom().setText(bundle.getString("label.copyFrom"));
+    	copyController.getLabelCopyTo().setText(bundle.getString("label.copyTo"));
+    	copyController.getCopyButton().setText(bundle.getString("label.copyButton"));
+    	copyController.getCancelButton().setText(bundle.getString("label.cancelButton"));
+    	copyController.setDirectoryAlertContextText(bundle.getString("label.directoryLabeContextText"));
+    	copyController.setDirectoryAlertHeader(bundle.getString("label.directoryAlertHeader"));
+    	copyController.setFileAlertContextText(bundle.getString("label.fileLabeContextText"));
+    	copyController.setFileAlertHeader(bundle.getString("label.fileAlertHeader"));
     }
     
     public void updateMoveLocale(ResourceBundle bundle) {
-    	
+    	moveController.setTextCancelButton(bundle.getString("label.cancelButton"));
+    	moveController.setTextMoveButton(bundle.getString("label.moveButton"));
+    	moveController.setTextLabelMoveTo(bundle.getString("label.moveTo"));
+    	moveController.setTextLabelMoveFrom(bundle.getString("label.moveFrom"));
     }
+    
+    public void updateProgressBarLocale(ResourceBundle bundle) {
+    	progressBarController.getCancelButton().setText(bundle.getString("label.cancelButton"));
+    }
+    
+	public void updateDateFormat(String dateFormat) throws IOException {
+		this.dateFormat = dateFormat;
+
+		all = fileService.getDirectoriesAndFiles(rootService.getSystemRoots().get(0), dateFormat);
+		jDirectoryTable.setItems(all);
+		jDirectoryTable1.setItems(all);
+
+	}
 
     
 	Menu file;

@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -48,14 +49,14 @@ public class JFileService {
 		return filesDeleted.get();
 	}
 
-	public ObservableList<JFile> getDirectoriesAndFiles(String dirPath) throws IOException {
-		ObservableList<JFile> directories = getDirectoriesInDirectory(dirPath);
-		ObservableList<JFile> files = getFilesForDirectory(dirPath);
+	public ObservableList<JFile> getDirectoriesAndFiles(String dirPath, String dateFormat) throws IOException {
+		ObservableList<JFile> directories = getDirectoriesInDirectory(dirPath, dateFormat);
+		ObservableList<JFile> files = getFilesForDirectory(dirPath, dateFormat);
 		directories.addAll(files);
 		return directories;
 	}
 	
-	public ObservableList<JFile> getFilesForDirectory(String fPath) throws IOException {
+	public ObservableList<JFile> getFilesForDirectory(String fPath, String dateFormat) throws IOException {
 		ObservableList<JFile> files =  FXCollections.observableArrayList();		
 		File folder = new File(fPath);
 		File[] listOfFiles = folder.listFiles();
@@ -67,7 +68,7 @@ public class JFileService {
 					jFile.setName(file.getName());
 					jFile.setSize(String.valueOf(getFileSize(fPath + File.separator + file.getName())));
 					//SimpleDateFormat format1 = new SimpleDateFormat("yyyy-MM-dd");
-					jFile.setFileTime(String.valueOf(getFileCreateDate(fPath + File.separator + file.getName())));
+					jFile.setFileTime(String.valueOf(getFileCreateDate(fPath + File.separator + file.getName(), dateFormat)));
 					files.add(jFile);
 				}
 			}
@@ -77,21 +78,28 @@ public class JFileService {
 	}
 	
 	
-	public String getFileCreateDate(String filePath) {
+	public String getFileCreateDate(String filePath, String dateFormat) {
 		Path path = Paths.get(filePath);
 		BasicFileAttributes attr;
 		FileTime fileTime = null;
 		String time = "";
+		String dateCreated = "";
 		//if(checkFileExistance(filePath)) {
 			try {
 				attr = Files.readAttributes(path, BasicFileAttributes.class);
+				
+				
+				DateFormat df = new SimpleDateFormat(dateFormat);
+				dateCreated = df.format(attr.creationTime().toMillis());
+				
 				fileTime = attr.creationTime();
 				time = fileTime.toString();
 			} catch (IOException e) {
 				System.out.println(e.getMessage());
 			}
 		//}
-		return time;
+		//return time;
+			return dateCreated;
 	}
 	
 	public long getFileSize(String filePath) {
@@ -205,7 +213,7 @@ public class JFileService {
 	
 	
 	
-	public ObservableList<JFile> getDirectoriesInDirectory(String dirPath) {
+	public ObservableList<JFile> getDirectoriesInDirectory(String dirPath, String dateFormat) {
 		
 		ObservableList<JFile> directories = FXCollections.observableArrayList();		
 		File folder = new File(dirPath);
@@ -216,7 +224,7 @@ public class JFileService {
 				if (file.isDirectory()) {
 					JFile jDir = new JFile();
 					jDir.setName(file.getName());
-					jDir.setFileTime(getFileCreateDate(dirPath));
+					jDir.setFileTime(getFileCreateDate(dirPath, dateFormat));
 					jDir.setSize("<DIR>");
 					directories.add(jDir);
 				}
